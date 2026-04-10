@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Пользователи
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("student") // student, admin
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  enrollments Enrollment[]
+}
+
+// Категории курсов
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  courses Course[]
+}
+
+// Курсы
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  image       String?
+  level       String   @default("beginner") // beginner, intermediate, advanced
+  duration    Int      @default(0) // в минутах
+  price       Float    @default(0)
+  isPublished Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  lessons     Lesson[]
+  enrollments Enrollment[]
+}
+
+// Уроки
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String?
+  content     String   // Markdown контент
+  videoUrl    String?
+  duration    Int      @default(0) // в минутах
+  order       Int      @default(0)
+  isFree      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// Записи на курсы
+model Enrollment {
+  id        String   @id @default(cuid())
+  progress  Int      @default(0) // процент прохождения
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId   String
+  user     User     @relation(fields: [userId], references: [id])
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id])
+  
+  @@unique([userId, courseId])
+}

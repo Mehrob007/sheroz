@@ -1,0 +1,101 @@
+@use 'variables' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $text-dark;
+  background-color: $bg-light;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color $transition-fast;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+// Утилиты
+.container {
+  max-width: $container-max;
+  margin: 0 auto;
+  padding: 0 $container-padding;
+  
+  @media (min-width: $breakpoint-md) {
+    padding: 0 $spacing-xl;
+  }
+}
+
+.section {
+  padding: $spacing-3xl 0;
+  
+  @media (min-width: $breakpoint-md) {
+    padding: $spacing-4xl 0;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: $primary;
+}
+
+.gradient-text {
+  background: $gradient-primary;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Стили для кода
+pre, code {
+  font-family: $font-mono;
+}
+
+pre {
+  background: $bg-code;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  overflow-x: auto;
+  color: #d4d4d4;
+}
+
+code {
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.125rem 0.375rem;
+  border-radius: $radius-sm;
+  font-size: 0.9em;
+  
+  pre & {
+    background: transparent;
+    padding: 0;
+  }
+}

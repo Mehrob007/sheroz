@@ -1,0 +1,18 @@
+// Card Component - точно по дизайну
+// Контейнер формы авторизации
+
+.card {
+  width: 400px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  @media (max-width: 440px) {
+    width: calc(100% - 32px);
+    padding: 32px 24px;
+  }
+}
