@@ -131,6 +131,56 @@
   }
 }
 
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.editBtn,
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.editBtn {
+  color: #1e3a5f;
+  background: #e0f2fe;
+  border: none;
+
+  &:hover {
+    background: #bae6fd;
+  }
+}
+
+.deleteBtn {
+  color: #dc2626;
+  background: #fef2f2;
+  border: none;
+
+  &:hover {
+    background: #fee2e2;
+  }
+}
+
 // Content
 .content {
   display: flex;

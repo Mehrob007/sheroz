@@ -1,23 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
-import { createEmployee, getDepartments, getPositions, seedData } from '@/lib/api';
+import { getEmployee, updateEmployee, getDepartments, getPositions, Department, Position } from '@/lib/api';
 import styles from './page.module.scss';
 
-// Получаем данные на сервере
-async function getFormData() {
-  const [departments, positions] = await Promise.all([
-    getDepartments().catch(() => []),
-    getPositions().catch(() => []),
-  ]);
-  return { departments, positions };
+interface EditEmployeePageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default function NewEmployeePage() {
+export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [employeeId, setEmployeeId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [formData, setFormData] = useState({
     last_name: '',
     first_name: '',
@@ -41,37 +40,86 @@ export default function NewEmployeePage() {
     snils: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  useEffect(() => {
+    params.then(p => {
+      setEmployeeId(p.id);
+      loadData(p.id);
+    });
+  }, [params]);
 
+  const loadData = async (id: string) => {
     try {
-      await createEmployee(formData);
-      router.push('/employees');
+      const [employee, depts, pos] = await Promise.all([
+        getEmployee(id),
+        getDepartments().catch(() => []),
+        getPositions().catch(() => []),
+      ]);
+
+      setDepartments(depts);
+      setPositions(pos);
+      setFormData({
+        last_name: employee.last_name || '',
+        first_name: employee.first_name || '',
+        middle_name: employee.middle_name || '',
+        birth_date: employee.birth_date || '',
+        gender: employee.gender || 'Мужской',
+        phone: employee.phone || '',
+        email: employee.email || '',
+        address: employee.address || '',
+        position_id: employee.position_id || '',
+        department_id: employee.department_id || '',
+        employment_type: employee.employment_type || 'штатный',
+        rate: employee.rate || 1,
+        hire_date: employee.hire_date || '',
+        education: employee.education || 'высшее',
+        degree: employee.degree || '',
+        rank: employee.rank || '',
+        passport_series: employee.passport_series || '',
+        passport_number: employee.passport_number || '',
+        inn: employee.inn || '',
+        snils: employee.snils || '',
+      });
     } catch (error) {
-      console.error('Error creating employee:', error);
-      alert('Ошибка при создании сотрудника. Убедитесь, что Go сервер запущен.');
+      console.error('Error loading employee:', error);
+      alert('Ошибка при загрузке данных сотрудника');
+      router.push('/employees');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSeed = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
     try {
-      await seedData();
-      alert('Данные успешно добавлены! Обновите страницу.');
+      await updateEmployee(employeeId, formData);
+      router.push(`/employees/${employeeId}`);
     } catch (error) {
-      console.error('Error seeding data:', error);
-      alert('Ошибка при добавлении данных. Убедитесь, что Go сервер запущен.');
+      console.error('Error updating employee:', error);
+      alert('Ошибка при обновлении сотрудника');
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <main className={styles.main}>
+        <Header />
+        <div className={styles.container}>
+          <div className={styles.loading}>Загрузка...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.main}>
       <Header />
       
       <div className={styles.container}>
-        <h1 className={styles.title}>Новый сотрудник</h1>
+        <h1 className={styles.title}>Редактирование сотрудника</h1>
         
         <form onSubmit={handleSubmit} className={styles.form}>
           {/* Личные данные */}
@@ -170,6 +218,39 @@ export default function NewEmployeePage() {
           {/* Трудовые данные */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Трудовые данные</h2>
+
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>Кафедра</label>
+                <select
+                  className={styles.select}
+                  value={formData.department_id}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                >
+                  <option value="">Выберите кафедру</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Должность</label>
+                <select
+                  className={styles.select}
+                  value={formData.position_id}
+                  onChange={(e) => setFormData({ ...formData, position_id: e.target.value })}
+                >
+                  <option value="">Выберите должность</option>
+                  {positions.map((pos) => (
+                    <option key={pos.id} value={pos.id}>
+                      {pos.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className={styles.row}>
               <div className={styles.field}>
@@ -304,11 +385,8 @@ export default function NewEmployeePage() {
             <button type="button" onClick={() => router.back()} className={styles.cancelBtn}>
               Отмена
             </button>
-            <button type="button" onClick={handleSeed} className={styles.seedBtn}>
-              Заполнить базу данных
-            </button>
-            <button type="submit" disabled={loading} className={styles.submitBtn}>
-              {loading ? 'Создание...' : 'Создать сотрудника'}
+            <button type="submit" disabled={saving} className={styles.submitBtn}>
+              {saving ? 'Сохранение...' : 'Сохранить изменения'}
             </button>
           </div>
         </form>
