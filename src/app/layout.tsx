@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FrontendSchool - Онлайн-школа фронтенд-разработки",
-  description: "Учим создавать современные веб-приложения с нуля до профессионального уровня",
+  title: "Учёт сотрудников - Мехмат",
+  description: "Система учёта сотрудников механико-математического факультета",
 };
 
 export default function RootLayout({
