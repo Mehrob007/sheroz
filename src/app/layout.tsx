@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.scss";
 
-const inter = Inter({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
-});
+// const inter = Inter({
+//   subsets: ["latin", "cyrillic"],
+//   variable: "--font-inter",
+// });
 
 export const metadata: Metadata = {
   title: "Учёт сотрудников - Мехмат",
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={inter.variable}>
+      <body style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         {children}
       </body>
     </html>

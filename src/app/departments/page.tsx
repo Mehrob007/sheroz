@@ -1,9 +1,28 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
-import { getDepartments } from '@/lib/api';
+import { getDepartments, Department } from '@/lib/api';
 import styles from './page.module.scss';
 
-export default async function DepartmentsPage() {
-  const departments = await getDepartments().catch(() => []);
+export default function DepartmentsPage() {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDepartments();
+  }, []);
+
+  const loadDepartments = async () => {
+    try {
+      const data = await getDepartments();
+      setDepartments(data);
+    } catch (error) {
+      console.error('Failed to load departments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className={styles.main}>
@@ -19,7 +38,9 @@ export default async function DepartmentsPage() {
           </div>
         </div>
 
-        {departments.length === 0 ? (
+        {loading ? (
+          <div className={styles.loading}>Загрузка...</div>
+        ) : departments.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -28,7 +49,7 @@ export default async function DepartmentsPage() {
               </svg>
             </div>
             <h2>Кафедры не найдены</h2>
-            <p>Заполните базу данных начальными данными на странице добавления сотрудника</p>
+            <p>Заполните базу данных начальными данными на странице сотрудников</p>
           </div>
         ) : (
           <div className={styles.grid}>
