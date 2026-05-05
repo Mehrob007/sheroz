@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
-import { getEmployee, updateEmployee, getDepartments, getPositions, Department, Position } from '@/lib/api';
+import { getEmployee, updateEmployee, getDepartments, getPositions, Department, Position, Employee } from '@/lib/api';
 import styles from './page.module.scss';
 
 interface EditEmployeePageProps {
@@ -11,12 +11,13 @@ interface EditEmployeePageProps {
 }
 
 export default function EditEmployeePage({ params }: EditEmployeePageProps) {
+  const { id } = use(params);
   const router = useRouter();
-  const [employeeId, setEmployeeId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  
   const [formData, setFormData] = useState({
     last_name: '',
     first_name: '',
@@ -41,18 +42,16 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
   });
 
   useEffect(() => {
-    params.then(p => {
-      setEmployeeId(p.id);
-      loadData(p.id);
-    });
-  }, [params]);
+    loadData();
+  }, [id]);
 
-  const loadData = async (id: string) => {
+  const loadData = async () => {
+    setLoading(true);
     try {
       const [employee, depts, pos] = await Promise.all([
         getEmployee(id),
-        getDepartments().catch(() => []),
-        getPositions().catch(() => []),
+        getDepartments(),
+        getPositions(),
       ]);
 
       setDepartments(depts);
@@ -93,8 +92,8 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
     setSaving(true);
 
     try {
-      await updateEmployee(employeeId, formData);
-      router.push(`/employees/${employeeId}`);
+      await updateEmployee(id, formData);
+      router.push(`/employees/${id}`);
     } catch (error) {
       console.error('Error updating employee:', error);
       alert('Ошибка при обновлении сотрудника');
@@ -226,6 +225,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   className={styles.select}
                   value={formData.department_id}
                   onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  required
                 >
                   <option value="">Выберите кафедру</option>
                   {departments.map((dept) => (
@@ -241,6 +241,7 @@ export default function EditEmployeePage({ params }: EditEmployeePageProps) {
                   className={styles.select}
                   value={formData.position_id}
                   onChange={(e) => setFormData({ ...formData, position_id: e.target.value })}
+                  required
                 >
                   <option value="">Выберите должность</option>
                   {positions.map((pos) => (

@@ -1,29 +1,60 @@
+'use client';
+
+import { useEffect, useState, use } from 'react';
 import Header from '@/components/Header';
-import { getEmployee, deleteEmployee } from '@/lib/api';
+import { getEmployee, deleteEmployee, Employee } from '@/lib/api';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.scss';
 
 interface EmployeePageProps {
   params: Promise<{ id: string }>;
 }
 
-// Server action for delete
-async function deleteEmployeeAction(id: string) {
-  'use server';
-  try {
-    await deleteEmployee(id);
-    revalidatePath('/employees');
-    redirect('/employees');
-  } catch (error) {
-    console.error('Error deleting employee:', error);
-  }
-}
+export default function EmployeePage({ params }: EmployeePageProps) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function EmployeePage({ params }: EmployeePageProps) {
-  const { id } = await params;
-  const employee = await getEmployee(id).catch(() => null);
+  useEffect(() => {
+    loadEmployee();
+  }, [id]);
+
+  const loadEmployee = async () => {
+    setLoading(true);
+    try {
+      const data = await getEmployee(id);
+      setEmployee(data);
+    } catch (error) {
+      console.error('Failed to load employee:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Вы уверены, что хотите удалить этого сотрудника?')) return;
+    
+    try {
+      await deleteEmployee(id);
+      router.push('/employees');
+    } catch (error) {
+      console.error('Error deleting employee:', error);
+      alert('Ошибка при удалении');
+    }
+  };
+
+  if (loading) {
+    return (
+      <main className={styles.main}>
+        <Header />
+        <div className={styles.container}>
+          <div className={styles.loading}>Загрузка...</div>
+        </div>
+      </main>
+    );
+  }
 
   if (!employee) {
     return (
@@ -32,7 +63,7 @@ export default async function EmployeePage({ params }: EmployeePageProps) {
         <div className={styles.container}>
           <div className={styles.notFound}>
             <h1>Сотрудник не найден</h1>
-            <Link href="/employees">Вернуться к списку</Link>
+            <Link href="/employees" className={styles.backBtn}>Вернуться к списку</Link>
           </div>
         </div>
       </main>
@@ -95,21 +126,18 @@ export default async function EmployeePage({ params }: EmployeePageProps) {
                 </svg>
                 Редактировать
               </Link>
-              <form action={deleteEmployeeAction.bind(null, id)}>
-                <button type="submit" className={styles.deleteBtn}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                  Удалить
-                </button>
-              </form>
+              <button onClick={handleDelete} className={styles.deleteBtn}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Удалить
+              </button>
             </div>
           </aside>
 
           {/* Content */}
           <div className={styles.content}>
-            {/* Личные данные */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Личные данные</h2>
               <div className={styles.grid}>
@@ -128,7 +156,6 @@ export default async function EmployeePage({ params }: EmployeePageProps) {
               </div>
             </section>
 
-            {/* Трудовые данные */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Трудовые данные</h2>
               <div className={styles.grid}>
@@ -151,7 +178,6 @@ export default async function EmployeePage({ params }: EmployeePageProps) {
               </div>
             </section>
 
-            {/* Документы */}
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>Документы</h2>
               <div className={styles.grid}>

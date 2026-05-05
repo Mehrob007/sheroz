@@ -1,23 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
-import { createEmployee, getDepartments, getPositions, seedData } from '@/lib/api';
+import { createEmployee, getDepartments, getPositions, Department, Position, seedData } from '@/lib/api';
 import styles from './page.module.scss';
-
-// Получаем данные на сервере
-async function getFormData() {
-  const [departments, positions] = await Promise.all([
-    getDepartments().catch(() => []),
-    getPositions().catch(() => []),
-  ]);
-  return { departments, positions };
-}
 
 export default function NewEmployeePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  
   const [formData, setFormData] = useState({
     last_name: '',
     first_name: '',
@@ -31,7 +25,7 @@ export default function NewEmployeePage() {
     department_id: '',
     employment_type: 'штатный',
     rate: 1,
-    hire_date: '',
+    hire_date: new Date().toISOString().split('T')[0],
     education: 'высшее',
     degree: '',
     rank: '',
@@ -40,6 +34,23 @@ export default function NewEmployeePage() {
     inn: '',
     snils: '',
   });
+
+  useEffect(() => {
+    loadFormData();
+  }, []);
+
+  const loadFormData = async () => {
+    try {
+      const [depts, pos] = await Promise.all([
+        getDepartments(),
+        getPositions(),
+      ]);
+      setDepartments(depts);
+      setPositions(pos);
+    } catch (error) {
+      console.error('Error loading form data:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,19 +61,17 @@ export default function NewEmployeePage() {
       router.push('/employees');
     } catch (error) {
       console.error('Error creating employee:', error);
-      alert('Ошибка при создании сотрудника. Убедитесь, что Go сервер запущен.');
+      alert('Ошибка при создании сотрудника.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSeed = async () => {
-    try {
+    if (confirm('Это сбросит все текущие данные. Продолжить?')) {
       await seedData();
-      alert('Данные успешно добавлены! Обновите страницу.');
-    } catch (error) {
-      console.error('Error seeding data:', error);
-      alert('Ошибка при добавлении данных. Убедитесь, что Go сервер запущен.');
+      await loadFormData();
+      alert('База данных заполнена начальными данными.');
     }
   };
 
@@ -71,7 +80,12 @@ export default function NewEmployeePage() {
       <Header />
       
       <div className={styles.container}>
-        <h1 className={styles.title}>Новый сотрудник</h1>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Новый сотрудник</h1>
+          <button type="button" onClick={handleSeed} className={styles.seedBtn}>
+            Заполнить демо-данными
+          </button>
+        </div>
         
         <form onSubmit={handleSubmit} className={styles.form}>
           {/* Личные данные */}
@@ -170,6 +184,37 @@ export default function NewEmployeePage() {
           {/* Трудовые данные */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Трудовые данные</h2>
+
+            <div className={styles.row}>
+              <div className={styles.field}>
+                <label className={styles.label}>Кафедра</label>
+                <select
+                  className={styles.select}
+                  value={formData.department_id}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  required
+                >
+                  <option value="">Выберите кафедру</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>Должность</label>
+                <select
+                  className={styles.select}
+                  value={formData.position_id}
+                  onChange={(e) => setFormData({ ...formData, position_id: e.target.value })}
+                  required
+                >
+                  <option value="">Выберите должность</option>
+                  {positions.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
             <div className={styles.row}>
               <div className={styles.field}>
@@ -303,9 +348,6 @@ export default function NewEmployeePage() {
           <div className={styles.actions}>
             <button type="button" onClick={() => router.back()} className={styles.cancelBtn}>
               Отмена
-            </button>
-            <button type="button" onClick={handleSeed} className={styles.seedBtn}>
-              Заполнить базу данных
             </button>
             <button type="submit" disabled={loading} className={styles.submitBtn}>
               {loading ? 'Создание...' : 'Создать сотрудника'}

@@ -113,27 +113,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Tech stack */}
-      <section className={styles.tech}>
-        <div className={styles.container}>
-          <h2 className={styles.sectionTitle}>Технологии</h2>
-          
-          <div className={styles.techGrid}>
-            <div className={styles.techItem}>
-              <div className={styles.techLogo}>Go</div>
-              <span>Backend API</span>
-            </div>
-            <div className={styles.techItem}>
-              <div className={styles.techLogo}>React</div>
-              <span>Frontend</span>
-            </div>
-            <div className={styles.techItem}>
-              <div className={styles.techLogo}>MongoDB</div>
-              <span>Database</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className={styles.footer}>
